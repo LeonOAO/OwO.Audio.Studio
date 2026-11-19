@@ -1,0 +1,11 @@
+{
+  "name": "owo-audio-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OwO Audio Studio：純瀏覽器、免上傳、多格式音訊編輯與轉換工具",
+  "type": "module",
+  "scripts": {
+    "test": "node --test Tests/Unit/*.test.js",
+    "serve": "python Launcher/Server.py"
+  }
+}

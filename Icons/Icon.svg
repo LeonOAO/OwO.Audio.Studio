@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- OwO Audio Studio 圖示：深色圓角底＋波形 -->
+  <rect width="128" height="128" rx="28" fill="#0f131c"/>
+  <circle cx="64" cy="64" r="46" fill="none" stroke="#2ec4a6" stroke-width="6"/>
+  <g stroke="#4f8cff" stroke-width="7" stroke-linecap="round">
+    <line x1="40" y1="56" x2="40" y2="72"/>
+    <line x1="52" y1="44" x2="52" y2="84"/>
+    <line x1="64" y1="34" x2="64" y2="94"/>
+    <line x1="76" y1="46" x2="76" y2="82"/>
+    <line x1="88" y1="56" x2="88" y2="72"/>
+  </g>
+</svg>

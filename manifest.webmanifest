@@ -1,0 +1,14 @@
+{
+  "name": "OwO Audio Studio",
+  "short_name": "OwO Audio",
+  "description": "純瀏覽器、免上傳、多格式音訊編輯與轉換工具",
+  "lang": "zh-Hant-TW",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f131c",
+  "theme_color": "#0f131c",
+  "icons": [
+    { "src": "Icons/Icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

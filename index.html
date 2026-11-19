@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+  OwO Audio Studio v1.0.0
+  純瀏覽器、免上傳、多格式音訊編輯與轉換工具
+
+  開啟方式：執行 Start.bat（或任何會送出 COOP/COEP 標頭的 HTTP 伺服器）
+  直接雙擊本檔案（file://）時，瀏覽器會阻擋 ES 模組，因此無法運作。
+  ==========================================================================
+-->
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OwO Audio Studio：在瀏覽器內完成毫秒級音訊剪輯、插入空白與多格式轉檔，檔案不會上傳。">
+  <meta name="theme-color" content="#0f131c">
+  <title>OwO Audio Studio</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="Icons/Icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="Source/App/Styles.css">
+</head>
+<body>
+  <!-- 應用程式根節點：由 Source/App/Main.js 掛載內容 -->
+  <div id="App" class="App">
+    <div class="Boot">
+      <div class="Spinner"></div>
+      <p>OwO Audio Studio 載入中…</p>
+    </div>
+  </div>
+
+  <!-- 啟動錯誤訊息 -->
+  <div id="BootError" class="BootError"></div>
+
+  <!-- 以 file:// 開啟時的說明 -->
+  <script>
+    if (location.protocol === 'file:') {
+      document.getElementById('App').innerHTML =
+        '<div class="Boot"><h2>請透過 Start.bat 開啟</h2>' +
+        '<p>瀏覽器不允許以 file:// 方式載入 ES 模組與 WebAssembly。</p>' +
+        '<p>請執行資料夾中的 <b>Start.bat</b>，或使用任何本機 HTTP 伺服器開啟本頁。</p></div>';
+    }
+  </script>
+  <script type="module" src="Source/App/Main.js"></script>
+</body>
+</html>

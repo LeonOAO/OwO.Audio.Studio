@@ -1,0 +1,8 @@
+# Cloudflare Pages／Netlify 標頭設定：啟用跨來源隔離（ffmpeg 多執行緒核心需要）
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin
+
+/Engine/*
+  Cache-Control: public, max-age=31536000, immutable
