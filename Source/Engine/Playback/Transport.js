@@ -10,6 +10,9 @@
  *   - 播放頭位置由 AudioContext.currentTime 對照排程表計算，不靠計時器估算
  *   - 循環播放：到達循環終點時直接接回循環起點
  *   - 專案變更時 invalidate()：清除已排程區塊並從目前位置重新排程
+ *
+ * 時長計算一律使用專案取樣率：區塊以專案取樣率建立，
+ * 即使瀏覽器不支援指定 AudioContext 取樣率，秒數仍然正確。
  * ========================================================================== */
 
 import { renderBlock } from '../Render/Mixer.js';
@@ -126,7 +129,7 @@ export class Transport {
   tick() {
     if (!this.playing) return;
     const now = this.ctx.currentTime;
-    const rate = this.getProject().sampleRate; // 區塊以專案取樣率建立，時長依此計算
+    const rate = this.getProject().sampleRate;
 
     // 移除已播放完畢的區塊（保留最後一塊供定位計算）
     while (this.segments.length > 1 && this.segments[0].when + this.segments[0].length / rate < now) {
@@ -152,7 +155,7 @@ export class Transport {
     const project = this.getProject();
     const bank = this.getBank();
     const rate = project.sampleRate;
-    const block = Math.max(128, Math.round(BLOCK_SECONDS * project.sampleRate));
+    const block = Math.max(128, Math.round(BLOCK_SECONDS * rate));
     const horizon = this.ctx.currentTime + LOOKAHEAD_SECONDS;
 
     while (this.nextWhen < horizon) {
@@ -166,7 +169,7 @@ export class Transport {
       if (length <= 0) return;
 
       const channels = renderBlock(project, bank, this.nextPos, length);
-      const buffer = this.ctx.createBuffer(channels.length, length, project.sampleRate);
+      const buffer = this.ctx.createBuffer(channels.length, length, rate);
       channels.forEach((data, c) => buffer.copyToChannel(data, c));
 
       const node = this.ctx.createBufferSource();

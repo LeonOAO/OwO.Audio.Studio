@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <!--
   ==========================================================================
-  OwO Audio Studio v1.0.0
+  OwO Audio Studio v1.0.0（GitHub Pages 版）
   純瀏覽器、免上傳、多格式音訊編輯與轉換工具
 
-  開啟方式：執行 Start.bat（或任何會送出 COOP/COEP 標頭的 HTTP 伺服器）
-  直接雙擊本檔案（file://）時，瀏覽器會阻擋 ES 模組，因此無法運作。
+  本頁由 GitHub Actions 自動部署到 GitHub Pages，不需要任何伺服器或安裝程式。
   ==========================================================================
 -->
 <html lang="zh-Hant-TW">
@@ -31,13 +30,13 @@
   <!-- 啟動錯誤訊息 -->
   <div id="BootError" class="BootError"></div>
 
-  <!-- 以 file:// 開啟時的說明 -->
+  <!-- 直接雙擊本機檔案開啟時的說明 -->
   <script>
     if (location.protocol === 'file:') {
       document.getElementById('App').innerHTML =
-        '<div class="Boot"><h2>請透過 Start.bat 開啟</h2>' +
+        '<div class="Boot"><h2>請從 GitHub Pages 網址開啟</h2>' +
         '<p>瀏覽器不允許以 file:// 方式載入 ES 模組與 WebAssembly。</p>' +
-        '<p>請執行資料夾中的 <b>Start.bat</b>，或使用任何本機 HTTP 伺服器開啟本頁。</p></div>';
+        '<p>請開啟 https://你的帳號.github.io/儲存庫名稱/ 使用。</p></div>';
     }
   </script>
   <script type="module" src="Source/App/Main.js"></script>

@@ -83,7 +83,7 @@ function ensureFadeIn(clip, len) {
 }
 
 /**
- * 在接點兩側加入淡化：結束於 position 的片段淡出、起始於 position 的片段淡入。
+ * 在接點兩側加入淡化：結束於 endPos 的片段淡出、起始於 startPos 的片段淡入。
  * @param {object[]} clips
  * @param {number} endPos   左側片段的結束位置
  * @param {number} startPos 右側片段的起始位置
@@ -173,7 +173,7 @@ export function rippleDelete(project, { start, end, trackIds = null, junctionFad
   const [a, b] = normalizeRange(start, end);
   const len = b - a;
 
-  let next = mapScopedTracks(project, trackIds, (track) => {
+  const next = mapScopedTracks(project, trackIds, (track) => {
     const split = splitTrackAt(splitTrackAt(track, a), b);
     const kept = [];
     for (const clip of split.clips) {
@@ -189,8 +189,7 @@ export function rippleDelete(project, { start, end, trackIds = null, junctionFad
   let newMarker = marker;
   if (marker >= b) newMarker = marker - len;
   else if (marker > a) newMarker = a;
-  next = { ...next, endMarker: newMarker };
-  return next;
+  return { ...next, endMarker: newMarker };
 }
 
 /**
@@ -537,14 +536,15 @@ export function setTrackProps(project, { trackId, patch }) {
 
 /**
  * 加入新來源並在時間軸放入一個完整片段。
- * 目標音軌為空時放在 0；否則新增一條音軌放在 0。
+ * 目標音軌放得下時放在該音軌；否則新增一條音軌。
  * @param {object} project
  * @param {{ source: object, trackId?: string|null, position?: number }} args
  * @returns {{ project: object, clipId: string, trackId: string }}
  */
 export function addSourceWithClip(project, { source, trackId = null, position = 0 }) {
   let next = { ...project, sources: { ...project.sources, [source.id]: source } };
-  let target = next.tracks.find((t) => t.id === trackId) || next.tracks[0];
+  let target = next.tracks.find((t) => t.id === trackId) || null;
+  if (!target && trackId === null) target = next.tracks[0];
 
   const clip = createClip({
     sourceId: source.id,

@@ -72,9 +72,10 @@ export function encodeWav(interleaved, sampleRate, channels, bitDepth = 24) {
     for (let i = 0; i < total; i += 1, o += 4) view.setFloat32(o, interleaved[i], true);
   } else if (bitDepth === 16) {
     for (let i = 0; i < total; i += 1, o += 2) {
-      // TPDF 抖動：兩個均勻分布亂數相減，幅度 ±1 LSB
-      const dither = (Math.random() - Math.random()) / 32768;
-      const v = Math.max(-1, Math.min(1, interleaved[i] + dither));
+      // TPDF 抖動：兩個均勻分布亂數相減，幅度 ±1 LSB；完全靜音的取樣點保持 0
+      const src = interleaved[i];
+      const dither = src === 0 ? 0 : (Math.random() - Math.random()) / 32768;
+      const v = Math.max(-1, Math.min(1, src + dither));
       view.setInt16(o, v < 0 ? Math.round(v * 32768) : Math.round(v * 32767), true);
     }
   } else {

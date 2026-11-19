@@ -93,8 +93,7 @@ export class Timeline {
           changed.has('selectedClipId') || changed.has('settings')) {
         this.dirtyWave = true;
       }
-      if (changed.has('project')) this.syncHeaders();
-      if (changed.has('currentTrackId')) this.syncHeaders();
+      if (changed.has('project') || changed.has('currentTrackId')) this.syncHeaders();
       this.dirtyOverlay = true;
     });
 
@@ -173,9 +172,8 @@ export class Timeline {
     }
 
     if (this.dirtyWave) {
-      if (this.waveCanvas.height !== Math.floor(Math.max(TRACK_HEIGHT, editor.project.tracks.length * TRACK_HEIGHT) * this.dpr)) {
-        this.applyTrackHeight();
-      }
+      const expected = Math.floor(Math.max(TRACK_HEIGHT, editor.project.tracks.length * TRACK_HEIGHT) * this.dpr);
+      if (this.waveCanvas.height !== expected) this.applyTrackHeight();
       this.drawWave();
       this.syncScrollbar();
       this.dirtyWave = false;
@@ -641,7 +639,7 @@ export class Timeline {
         anchor = Math.abs(sample - start) < Math.abs(sample - end) ? end : start;
         editor.setSelection(anchor, sample);
       }
-      this.drag = { type: 'select', anchor, startX: x, trackId: hit.track.id, moved: e.shiftKey, shift: e.shiftKey };
+      this.drag = { type: 'select', anchor, startX: x, trackId: hit.track.id, moved: e.shiftKey };
     });
 
     canvas.addEventListener('pointermove', (e) => {
@@ -730,7 +728,7 @@ class TrackHeaderRow {
       }
     });
     this.mute = h('button', {
-      class: 'TrackBtn', type: 'button', title: '靜音（M）',
+      class: 'TrackBtn', type: 'button', title: '靜音',
       onclick: () => editor.setTrackProps(trackId, { muted: !this.track.muted })
     }, 'M');
     this.solo = h('button', {

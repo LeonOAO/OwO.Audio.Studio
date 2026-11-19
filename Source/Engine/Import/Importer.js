@@ -12,12 +12,13 @@
  * 後續檔案在解碼時直接轉成專案規格，因此時間軸上所有來源取樣點一致。
  *
  * 注意：瀏覽器後備解碼會重新取樣到專案取樣率，且部分格式（WMA、AMR、AC-3 等）
- *       在多數瀏覽器無法解碼，因此建議安裝 ffmpeg 核心。
+ *       在多數瀏覽器無法解碼，因此網站部署時會一併放入 ffmpeg 核心。
  * ========================================================================== */
 
 import { createId } from '../../Domain/Model.js';
+import { ENGINE_MISSING_TEXT } from '../FFmpeg/FFmpegClient.js';
 
-/** 依副檔名分類，用於提示與介面顯示 */
+/** 依副檔名分類，用於提示與檔案選擇器 */
 export const FORMAT_GROUPS = Object.freeze({
   audio: [
     'mp3', 'aac', 'adts', 'm4a', 'm4b', 'wav', 'wave', 'flac', 'ogg', 'oga', 'opus', 'webm',
@@ -89,10 +90,10 @@ export class Importer {
     const ext = extensionOf(file.name);
 
     if (['mid', 'midi', 'mod', 'xm', 's3m', 'it'].includes(ext)) {
-      throw new Error(`「${file.name}」屬於 MIDI／Tracker 格式，需要額外的合成器套件（規劃於擴充格式套件），目前版本尚未內建。`);
+      throw new Error(`「${file.name}」屬於 MIDI／Tracker 格式，需要額外的合成器套件，目前版本尚未內建。`);
     }
     if (['pcm', 'raw'].includes(ext)) {
-      throw new Error(`「${file.name}」是沒有標頭的原始 PCM，請先轉成 WAV 再匯入，或於後續版本使用原始 PCM 匯入對話框。`);
+      throw new Error(`「${file.name}」是沒有標頭的原始 PCM，請先轉成 WAV 再匯入。`);
     }
 
     if (this.ffmpeg.available) {
@@ -173,7 +174,7 @@ export class Importer {
       const ctx = new OfflineAudioContext(channels, 1, sampleRate);
       audioBuffer = await ctx.decodeAudioData(buffer);
     } catch {
-      throw new Error(`瀏覽器無法解碼「${file.name}」。請執行 FetchEngine 安裝 ffmpeg 核心以支援更多格式。`);
+      throw new Error(`瀏覽器無法解碼「${file.name}」。${ENGINE_MISSING_TEXT}`);
     }
 
     // 聲道對應：不足時複製第 0 聲道，過多時取前面幾個聲道

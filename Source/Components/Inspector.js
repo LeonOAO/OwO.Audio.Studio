@@ -3,9 +3,9 @@
  * Components / Inspector
  * --------------------------------------------------------------------------
  * 右側屬性面板：
- *   片段   位置、長度、來源範圍、增益、淡入淡出、正規化、刪除、原始格式資訊
+ *   片段   位置、長度、增益、淡入淡出、正規化、刪除、原始格式資訊
  *   專案   名稱、取樣率、聲道、長度、來源數量、儲存空間
- *   設定   接點淡化、預設淡化曲線、插入貼上推移範圍
+ *   設定   接點淡化、預設淡化曲線、插入貼上推移範圍、新專案取樣率
  * ========================================================================== */
 
 import { h, select, replaceChildren } from './Dom.js';
@@ -57,7 +57,6 @@ export class Inspector {
     }
 
     const { clip } = found;
-    const rate = editor.project.sampleRate;
     const unit = editor.state.settings.unit;
 
     // 同一片段只更新數值，避免重建造成輸入焦點遺失
@@ -95,11 +94,12 @@ export class Inspector {
       return { input, row: h('label', { class: 'Row' }, h('span', null, label), h('span', { class: 'Inline' }, input, h('em', null, suffix))) };
     };
 
+    const rate = () => editor.project.sampleRate;
     const gain = numberField('增益', clip.gainDb, 0.1, (v) => editor.setClipProps(clip.id, { gainDb: Math.max(-60, Math.min(24, v)) }), 'dB');
-    const fadeIn = numberField('淡入', Math.round(samplesToMs(clip.fadeIn.length, rate)), 1,
-      (v) => editor.setClipProps(clip.id, { fadeIn: { ...this.currentClip().fadeIn, length: msToSamples(Math.max(0, v), editor.project.sampleRate) } }), 'ms');
-    const fadeOut = numberField('淡出', Math.round(samplesToMs(clip.fadeOut.length, rate)), 1,
-      (v) => editor.setClipProps(clip.id, { fadeOut: { ...this.currentClip().fadeOut, length: msToSamples(Math.max(0, v), editor.project.sampleRate) } }), 'ms');
+    const fadeIn = numberField('淡入', Math.round(samplesToMs(clip.fadeIn.length, rate())), 1,
+      (v) => editor.setClipProps(clip.id, { fadeIn: { ...this.currentClip().fadeIn, length: msToSamples(Math.max(0, v), rate()) } }), 'ms');
+    const fadeOut = numberField('淡出', Math.round(samplesToMs(clip.fadeOut.length, rate())), 1,
+      (v) => editor.setClipProps(clip.id, { fadeOut: { ...this.currentClip().fadeOut, length: msToSamples(Math.max(0, v), rate()) } }), 'ms');
     const fadeInCurve = select(CURVES, clip.fadeIn.curve, (v) => editor.setClipProps(clip.id, { fadeIn: { ...this.currentClip().fadeIn, curve: v } }));
     const fadeOutCurve = select(CURVES, clip.fadeOut.curve, (v) => editor.setClipProps(clip.id, { fadeOut: { ...this.currentClip().fadeOut, curve: v } }));
     const info = h('div', { class: 'InfoGrid' });

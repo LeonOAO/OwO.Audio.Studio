@@ -50,7 +50,6 @@ export class TimeBar {
     this.length = new TimeInput({
       label: '長度',
       context,
-      nudge: true,
       title: '輸入長度會從起點重新計算終點',
       onCommit: (v) => {
         const { start, end } = editor.state.selection;

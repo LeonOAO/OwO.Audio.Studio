@@ -7,13 +7,17 @@
  *   - 依需求延遲載入 Worker 與核心
  *   - 以 jobId 管理工作、回報進度、支援取消（terminate 後重建）
  *
- * 核心檔案放置位置：
+ * 核心檔案由 GitHub Actions（.github/workflows/Deploy.yml）部署時自動放入：
  *   Engine/ST/ffmpeg-core.js、ffmpeg-core.wasm
  *   Engine/MT/ffmpeg-core.js、ffmpeg-core.wasm、ffmpeg-core.worker.js
  * ========================================================================== */
 
 const WORKER_URL = new URL('../../Workers/FFmpeg.worker.js', import.meta.url);
 const ENGINE_BASE = new URL('../../../Engine/', import.meta.url);
+
+/** 找不到核心時的統一說明 */
+export const ENGINE_MISSING_TEXT =
+  '網站上找不到 ffmpeg 核心。請到 GitHub 儲存庫的 Actions 頁籤，確認「部署到 GitHub Pages」是否執行成功。';
 
 /** 引擎模式 */
 export const EngineMode = Object.freeze({
@@ -53,8 +57,8 @@ export class FFmpegClient {
    * @returns {Promise<string>} EngineMode
    */
   async detect() {
-    const mtCore = new URL('MT/ffmpeg-core.js', ENGINE_BASE).href;
-    const stCore = new URL('ST/ffmpeg-core.js', ENGINE_BASE).href;
+    const mtCore = new URL('MT/ffmpeg-core.wasm', ENGINE_BASE).href;
+    const stCore = new URL('ST/ffmpeg-core.wasm', ENGINE_BASE).href;
 
     if (self.crossOriginIsolated && (await exists(mtCore))) this.mode = EngineMode.Multi;
     else if (await exists(stCore)) this.mode = EngineMode.Single;
@@ -83,7 +87,7 @@ export class FFmpegClient {
   /** 建立 Worker 並載入核心（只執行一次） */
   async ensureLoaded() {
     if (!this.detected) await this.detect();
-    if (!this.available) throw new Error('找不到 ffmpeg 核心，請先執行 FetchEngine 下載。');
+    if (!this.available) throw new Error(ENGINE_MISSING_TEXT);
     if (this.loaded) return;
     if (this.loadingPromise) return this.loadingPromise;
 

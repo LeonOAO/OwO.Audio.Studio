@@ -147,6 +147,7 @@ export class ExportDialog {
       metaGrid,
       h('label', { class: 'Row' }, h('span', null, '封面圖片'), this.coverInput));
 
+    // 提示放在最上方，避免被長表單擠到看不見
     const body = h('div', { class: 'Form ExportForm' },
       this.notice,
       h('fieldset', { class: 'Fieldset' },
@@ -175,7 +176,7 @@ export class ExportDialog {
     const firstSource = Object.values(project.sources)[0];
     const base = project.name && project.name !== '未命名專案'
       ? project.name
-      : firstSource ? firstSource.fileName.replace(/\.[^.]+$/, '') + '_edit' : 'OwO_Audio';
+      : firstSource ? `${firstSource.fileName.replace(/\.[^.]+$/, '')}_edit` : 'OwO_Audio';
     this.fileName.value = base;
 
     // 中繼資料：從第一個來源帶入（只填空白欄位）
@@ -220,7 +221,7 @@ export class ExportDialog {
     this.coverInput.disabled = !preset.cover || !engine;
     this.sampleRate.disabled = Boolean(preset.fixedRate);
     if (preset.fixedRate) this.sampleRate.value = String(preset.fixedRate);
-    else if (this.sampleRate.value === '48000' && this.lastFixed) this.sampleRate.value = 'source';
+    else if (this.lastFixed) this.sampleRate.value = 'source';
     this.lastFixed = Boolean(preset.fixedRate);
 
     // 提示與可用性
@@ -237,8 +238,8 @@ export class ExportDialog {
       if (!engine && !builtinWav) {
         blocked = true;
         notes.push(preset.id === 'wav'
-          ? '⚠ 未安裝 ffmpeg 核心：WAV 只能以「跟隨專案」的取樣率與聲道輸出。'
-          : `⚠ ${preset.label} 需要 ffmpeg 核心。請執行 FetchEngine 下載核心，或改選 WAV。`);
+          ? '⚠ 未找到 ffmpeg 核心：WAV 只能以「跟隨專案」的取樣率與聲道輸出。'
+          : `⚠ ${preset.label} 需要 ffmpeg 核心。請到 GitHub 的 Actions 頁籤確認部署是否成功，或改選 WAV。`);
       }
       if (preset.fixedRate) notes.push(`ℹ ${preset.label} 固定使用 ${preset.fixedRate.toLocaleString()} Hz。`);
       if (preset.allowedRates) notes.push(`ℹ ${preset.label} 只支援 ${preset.allowedRates.map((r) => r.toLocaleString()).join('、')} Hz。`);

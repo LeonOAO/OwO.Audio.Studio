@@ -6,10 +6,10 @@
  *
  *   UI 元件 ──呼叫──► Editor 動作 ──► Domain 純函式 ──► Store 更新 ──► UI 重繪
  *                         │
- *                         ├─ History   復原／重做
- *                         ├─ Transport 播放
- *                         ├─ Importer  匯入
- *                         ├─ Exporter  匯出
+ *                         ├─ History     復原／重做
+ *                         ├─ Transport   播放
+ *                         ├─ Importer    匯入
+ *                         ├─ Exporter    匯出
  *                         └─ Persistence 自動儲存
  *
  * 規則：所有修改專案的操作一律經過 commit()，因此都能復原。
@@ -143,12 +143,15 @@ export class Editor {
     const engineText = {
       mt: 'ffmpeg 多執行緒核心',
       st: 'ffmpeg 單執行緒核心',
-      none: '未安裝 ffmpeg 核心（瀏覽器解碼＋內建 WAV）'
+      none: '未找到 ffmpeg 核心（瀏覽器解碼＋內建 WAV）'
     }[mode];
     this.store.update('engine', { status: mode === 'none' ? 'fallback' : 'ready', mode, message: engineText });
     this.log(`音訊引擎：${engineText}`, mode === 'none' ? 'warn' : 'info');
+    if (mode === 'none') {
+      this.log('網站上找不到 Engine 資料夾的核心檔案；請到 GitHub 的 Actions 頁籤確認部署是否成功。', 'warn');
+    }
     if (mode === 'st' && !self.crossOriginIsolated) {
-      this.log('目前頁面未啟用跨來源隔離，使用單執行緒核心；透過 Start.bat 開啟可啟用多執行緒。');
+      this.log('頁面尚未啟用跨來源隔離，暫用單執行緒核心；重新整理頁面通常即可改用多執行緒。');
     }
 
     // 儲存服務與還原
@@ -682,11 +685,12 @@ export class Editor {
         this.bank[meta.id] = { channels };
         this.files.set(meta.id, { file, audioIndex: meta.originalFormat.audioIndex || 0 });
 
+        // 目前音軌是空的就放進去，否則新增一條音軌
         const target = findTrack(base, this.state.currentTrackId);
-        const placement = target && target.clips.length === 0 ? target.id : null;
+        const placement = target && target.clips.length === 0 ? target.id : '__new__';
         let added = null;
         this.commit(`匯入 ${file.name}`, () => {
-          const result = Edit.addSourceWithClip(base, { source: meta, trackId: placement || '__new__', position: 0 });
+          const result = Edit.addSourceWithClip(base, { source: meta, trackId: placement, position: 0 });
           added = result;
           return result.project;
         });
@@ -800,7 +804,7 @@ export class Editor {
     this.log('已建立新專案。');
   }
 
-  /** 原始檔案資訊（快速裁切可用性判斷） */
+  /** 是否可使用快速裁切 */
   canFastCut() {
     const ids = Object.keys(this.project.sources);
     return this.ffmpeg.available && ids.length === 1 && this.files.has(ids[0]);

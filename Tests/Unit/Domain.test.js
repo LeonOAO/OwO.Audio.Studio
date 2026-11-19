@@ -2,8 +2,9 @@
  * OwO Audio Studio v1.0.0
  * Tests / Unit / Domain
  * --------------------------------------------------------------------------
- * 執行方式：node --test Tests/Unit/
- * 驗證時間轉換、所有剪輯操作與混音結果是否精確到取樣點。
+ * GitHub Actions 部署前會自動執行：node --test Tests/Unit/*.test.js
+ * 驗證時間轉換、所有剪輯操作與混音結果是否精確到取樣點；
+ * 任何一項失敗都會中止部署，避免把壞掉的版本發布到網站。
  * ========================================================================== */
 
 import test from 'node:test';
@@ -17,15 +18,17 @@ import {
 } from '../../Source/Domain/Edit.js';
 import { renderBlock } from '../../Source/Engine/Render/Mixer.js';
 import { findZeroCrossing } from '../../Source/Domain/Analysis.js';
+import { encodeWav } from '../../Source/Engine/Export/WavEncoder.js';
+import { crc32 } from '../../Source/Engine/Export/Zip.js';
 
 const RATE = 48000;
 
-/* ---------- 測試工具：建立一個 2 秒、數值＝索引+1 的單聲道來源 ---------- */
+/* ---------- 測試工具：建立一個 2 秒、數值永不為 0 的單聲道來源 ---------- */
 function makeFixture(seconds = 2) {
   const length = RATE * seconds;
   const data = new Float32Array(length);
-  for (let i = 0; i < length; i += 1) data[i] = (i % 1000) / 1000 + 0.001; // 永不為 0
-  const project0 = { ...createProject({ sampleRate: RATE, channelCount: 1 }) };
+  for (let i = 0; i < length; i += 1) data[i] = (i % 1000) / 1000 + 0.001;
+  const project0 = createProject({ sampleRate: RATE, channelCount: 1 });
   const source = { id: 'src_a', fileName: 'a.wav', length, channelCount: 1, sampleRate: RATE };
   const { project } = addSourceWithClip(project0, { source });
   const bank = { src_a: { channels: [data] } };
@@ -148,7 +151,7 @@ test('複製後插入貼上與覆蓋貼上', () => {
   assert.equal(b[6000], data[6000]);
 });
 
-test('淡入範圍：起點為 0 附近、終點恢復原值', () => {
+test('淡入範圍：起點接近 0、終點恢復原值', () => {
   const { project, bank, data } = makeFixture();
   const next = fadeRange(project, { start: 0, end: 4800, direction: 'in', curve: 'linear' });
   const out = renderAll(next, bank);
@@ -179,4 +182,29 @@ test('零交越點搜尋', () => {
   for (let i = 0; i < 1000; i += 1) data[i] = Math.sin((i / 100) * Math.PI * 2);
   const zc = findZeroCrossing([data], 140, 30);
   assert.ok(Math.abs(zc - 150) <= 1);
+});
+
+/* ------------------------------ 匯出工具 ------------------------------ */
+
+test('內建 WAV 編碼器：標頭與 24-bit 數值', () => {
+  const pcm = new Float32Array([0, 0.5, -0.5, 1]);
+  const wav = encodeWav(pcm, RATE, 2, 24);
+  const view = new DataView(wav.buffer);
+  assert.equal(String.fromCharCode(...wav.slice(0, 4)), 'RIFF');
+  assert.equal(view.getUint32(24, true), RATE);
+  assert.equal(view.getUint16(22, true), 2);
+  assert.equal(wav.length, 44 + 4 * 3);
+  const sample = (i) => {
+    const o = 44 + i * 3;
+    let v = wav[o] | (wav[o + 1] << 8) | (wav[o + 2] << 16);
+    if (v & 0x800000) v -= 0x1000000;
+    return v;
+  };
+  assert.equal(sample(0), 0);
+  assert.equal(sample(1), Math.round(0.5 * 8388607));
+  assert.equal(sample(2), Math.round(-0.5 * 8388608));
+});
+
+test('ZIP：CRC-32 標準值', () => {
+  assert.equal(crc32(new TextEncoder().encode('123456789')), 0xcbf43926);
 });

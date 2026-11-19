@@ -1,0 +1,4 @@
+# 部署時由 GitHub Actions 產生，不需要放進儲存庫
+_site/
+Engine/
+node_modules/

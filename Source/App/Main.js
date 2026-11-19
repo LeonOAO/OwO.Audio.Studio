@@ -7,6 +7,9 @@
  *   2. 建立 Editor 與所有 UI 元件並掛載到頁面
  *   3. 綁定快捷鍵、拖曳匯入
  *   4. 初始化引擎與還原上次專案
+ *
+ * GitHub Pages 無法自訂 HTTP 標頭，因此第一次開啟時由 ServiceWorker.js
+ * 補上 COOP／COEP 標頭並自動重新整理一次，之後即可使用多執行緒核心。
  * ========================================================================== */
 
 import { Editor } from './Editor.js';
@@ -22,32 +25,45 @@ import { LogPanel, StatusBar, Toast, BusyOverlay, DropOverlay } from '../Compone
 import { bindShortcuts } from '../Platform/Shortcuts.js';
 import { ACCEPT_ATTRIBUTE } from '../Engine/Import/Importer.js';
 
+const COI_RELOAD_KEY = 'OwOAudioStudio.CoiReload';
+
 /* --------------------------------------------------------------------------
  * Service Worker
  * ------------------------------------------------------------------------ */
 
+/**
+ * 註冊 Service Worker。
+ * @returns {Promise<boolean>} 是否即將重新整理頁面（是的話不必再啟動編輯器）
+ */
 async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return false;
   try {
-    const reg = await navigator.serviceWorker.register(new URL('../../ServiceWorker.js', import.meta.url), { scope: './' });
-
-    // 伺服器未提供 COOP/COEP 標頭時（例如 GitHub Pages），由 Service Worker 補上後重新載入一次
-    if (!self.crossOriginIsolated && !sessionStorage.getItem('OwOAudioStudio.CoiReload')) {
-      await navigator.serviceWorker.ready;
-      if (reg.active && navigator.serviceWorker.controller) {
-        sessionStorage.setItem('OwOAudioStudio.CoiReload', '1');
-        location.reload();
-        return;
-      }
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!sessionStorage.getItem('OwOAudioStudio.CoiReload')) {
-          sessionStorage.setItem('OwOAudioStudio.CoiReload', '1');
-          location.reload();
-        }
-      });
+    await navigator.serviceWorker.register(new URL('../../ServiceWorker.js', import.meta.url), { scope: './' });
+    if (self.crossOriginIsolated) {
+      sessionStorage.removeItem(COI_RELOAD_KEY);
+      return false;
     }
+
+    // 尚未隔離：等 Service Worker 接管後重新整理一次（同一分頁只嘗試一次，避免無限重新整理）
+    if (sessionStorage.getItem(COI_RELOAD_KEY)) return false;
+    await navigator.serviceWorker.ready;
+    sessionStorage.setItem(COI_RELOAD_KEY, '1');
+    if (navigator.serviceWorker.controller) {
+      location.reload();
+      return true;
+    }
+    // 等待接管；3 秒內沒有接管就直接啟動編輯器（以單執行緒模式運作）
+    return await new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(false), 3000);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        clearTimeout(timer);
+        location.reload();
+        resolve(true);
+      }, { once: true });
+    });
   } catch (error) {
     console.warn('Service Worker 註冊失敗：', error);
+    return false;
   }
 }
 
@@ -131,7 +147,7 @@ async function main() {
 
   bindShortcuts(editor, actions);
 
-  // 關閉頁面前提醒（播放中或忙碌時）
+  // 匯入／匯出進行中關閉頁面時提醒
   window.addEventListener('beforeunload', (e) => {
     if (editor.state.busy.active) {
       e.preventDefault();
@@ -148,8 +164,11 @@ async function main() {
  * 進入點
  * ------------------------------------------------------------------------ */
 
-registerServiceWorker();
-main().catch((error) => {
+(async () => {
+  const reloading = await registerServiceWorker();
+  if (reloading) return;
+  await main();
+})().catch((error) => {
   console.error(error);
   const box = document.getElementById('BootError');
   if (box) {

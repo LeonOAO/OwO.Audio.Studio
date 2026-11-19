@@ -4,6 +4,7 @@
  * --------------------------------------------------------------------------
  * 直接驅動 @ffmpeg/core 的 UMD 版本（ffmpeg-core.js / .wasm），
  * 不依賴 @ffmpeg/ffmpeg 包裝層，也不需要任何建置工具。
+ * 核心檔案由 GitHub Actions 部署時自動下載到 Engine/ST 與 Engine/MT。
  *
  * 訊息協定（主執行緒 → Worker）：
  *   { type:'load',    jobId, coreURL, wasmURL, workerURL }
@@ -92,7 +93,7 @@ async function load({ coreURL, wasmURL, workerURL }) {
 
   importScripts(coreURL); // UMD 版本會在全域定義 createFFmpegCore
   if (typeof createFFmpegCore !== 'function') {
-    throw new Error('ffmpeg-core.js 未定義 createFFmpegCore，請確認放入的是 UMD 版本。');
+    throw new Error('ffmpeg-core.js 未定義 createFFmpegCore，核心檔案可能不完整。');
   }
 
   // 與官方 @ffmpeg/ffmpeg 相同的載入方式：以 hash 傳遞 wasm 與 worker 路徑
@@ -200,7 +201,7 @@ function parseProbe(lines) {
 
   for (const line of lines) {
     let m;
-    if ((m = /^Input #0, ([^,]+(?:,[^,]+)*?), from/.exec(line))) {
+    if ((m = /^Input #0, (.+?), from/.exec(line))) {
       info.format = m[1];
       continue;
     }
@@ -265,7 +266,7 @@ function probe({ file }) {
 }
 
 /* --------------------------------------------------------------------------
- * 解碼：輸出原始取樣率（或指定取樣率）的 32-bit float PCM
+ * 解碼：輸出指定取樣率的 32-bit float PCM
  * ------------------------------------------------------------------------ */
 
 function decode({ file, audioIndex = 0, sampleRate, channels }) {

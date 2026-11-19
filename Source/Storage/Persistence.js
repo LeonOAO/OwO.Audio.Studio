@@ -2,7 +2,7 @@
  * OwO Audio Studio v1.0.0
  * Storage / Persistence
  * --------------------------------------------------------------------------
- * 自動儲存與還原：
+ * 自動儲存與還原（資料只存在使用者自己的瀏覽器，不會上傳到 GitHub）：
  *
  *   專案模型（JSON） → IndexedDB  OwOAudioStudio / kv / currentProject
  *   解碼後 PCM       → OPFS       Sources/{sourceId}.pcm

@@ -1,0 +1,4 @@
+# 統一使用 LF 換行，避免 GitHub Desktop 在 Windows 上出現整份檔案都被標示修改的情況
+* text=auto eol=lf
+*.svg text eol=lf
+*.wasm binary

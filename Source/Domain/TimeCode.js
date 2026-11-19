@@ -148,7 +148,7 @@ export function parseTime(text, sampleRate, defaultUnit = TimeUnit.Time) {
   let src = text.trim().replace(/，/g, ',').replace(/：/g, ':').replace(/\s+/g, '');
   if (!src) return null;
 
-  // 相對值判斷：開頭為 + 視為相對；開頭為 - 且帶單位時也視為相對
+  // 相對值判斷：開頭為 + 或 - 皆視為相對調整
   let relative = false;
   let sign = 1;
   if (src.startsWith('+')) {
@@ -184,12 +184,11 @@ export function parseTime(text, sampleRate, defaultUnit = TimeUnit.Time) {
 
   if (samples === null || !Number.isFinite(samples)) return null;
 
-  // 未帶 + 的負號在絕對時間沒有意義，一律視為相對
   return { samples: sign * samples, relative };
 }
 
 /**
- * 依刻度大小選出合適的時間尺間距（取樣點）。
+ * 依縮放程度選出合適的時間尺間距（取樣點）。
  * @param {number} samplesPerPixel
  * @param {number} sampleRate
  * @param {number} [minPixels=90] 兩個主刻度之間的最小像素

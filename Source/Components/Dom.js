@@ -52,7 +52,7 @@ export function $(id) {
 }
 
 /**
- * 建立帶標籤的下拉選單。
+ * 建立下拉選單。
  * @param {[any, string][]} choices
  * @param {any} value
  * @param {(value: string) => void} onChange
@@ -65,7 +65,7 @@ export function select(choices, value, onChange, props = {}) {
   return el;
 }
 
-/** 取得事件是否發生在可輸入元素內 */
+/** 判斷事件是否發生在可輸入元素內 */
 export function isTypingTarget(target) {
   if (!target) return false;
   const tag = target.tagName;

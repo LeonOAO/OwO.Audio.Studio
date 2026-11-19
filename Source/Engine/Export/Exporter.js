@@ -19,6 +19,7 @@ import { encodeWav } from './WavEncoder.js';
 import { createZip } from './Zip.js';
 import { getPreset, buildArgs } from './Presets.js';
 import { extensionOf } from '../Import/Importer.js';
+import { ENGINE_MISSING_TEXT } from '../FFmpeg/FFmpegClient.js';
 
 /** MIME 對照 */
 const MIME = {
@@ -59,11 +60,8 @@ export async function runExport({ project, bank, ffmpeg, request, onProgress, lo
     && request.common.sampleRate === 'source'
     && request.common.channels === 'source';
 
-  if (!useBuiltinWav && preset.engine !== false && !ffmpeg.available) {
-    throw new Error(`輸出 ${preset.label} 需要 ffmpeg 核心，請先執行 FetchEngine 下載；或改用 WAV 輸出。`);
-  }
   if (!useBuiltinWav && !ffmpeg.available) {
-    throw new Error('變更取樣率或聲道需要 ffmpeg 核心；請將取樣率與聲道設為「跟隨專案」。');
+    throw new Error(`輸出 ${preset.label} 或變更取樣率／聲道需要 ffmpeg 核心。${ENGINE_MISSING_TEXT}`);
   }
 
   // 封面圖讀入一次，所有輸出共用
@@ -140,7 +138,7 @@ export async function runExport({ project, bank, ffmpeg, request, onProgress, lo
 
 /** 快速裁切原始檔（不重新編碼） */
 async function fastCut({ project, ffmpeg, request, base, onProgress, log }) {
-  if (!ffmpeg.available) throw new Error('快速裁切需要 ffmpeg 核心。');
+  if (!ffmpeg.available) throw new Error(`快速裁切需要 ffmpeg 核心。${ENGINE_MISSING_TEXT}`);
   const src = request.fastCutSource;
   if (!src || !src.file) throw new Error('找不到原始檔案；快速裁切只能用於本次工作階段中匯入的檔案。');
 

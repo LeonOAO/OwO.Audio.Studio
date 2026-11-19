@@ -1,0 +1,100 @@
+# ==========================================================================
+# OwO Audio Studio v1.0.0
+# .github/workflows/Deploy.yml
+# --------------------------------------------------------------------------
+# 推送到 main 分支時自動執行：
+#   1. 執行單元測試（失敗就停止，不會發布壞掉的版本）
+#   2. 組合網站檔案到 _site
+#   3. 從 npm 下載 ffmpeg.wasm 核心到 _site/Engine/ST 與 _site/Engine/MT
+#   4. 驗證核心檔案
+#   5. 部署到 GitHub Pages
+#
+# 使用前請到儲存庫 Settings → Pages，把 Source 設為「GitHub Actions」。
+# 也可以在 Actions 頁籤手動按「Run workflow」重新部署。
+# ==========================================================================
+
+name: 部署到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  FFMPEG_CORE_VERSION: "0.12.6"
+
+jobs:
+  build:
+    name: 建置
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出程式碼
+        uses: actions/checkout@v6
+
+      - name: 執行單元測試
+        run: node --test Tests/Unit/*.test.js
+
+      - name: 組合網站檔案
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp -r index.html ServiceWorker.js manifest.webmanifest Icons Source _site/
+          touch _site/.nojekyll
+
+      - name: 下載 ffmpeg.wasm 核心
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          for entry in "ST:@ffmpeg/core" "MT:@ffmpeg/core-mt"; do
+            folder="${entry%%:*}"
+            package="${entry#*:}"
+            echo "▶ ${package}@${FFMPEG_CORE_VERSION} → Engine/${folder}"
+            echo ""
+            tarball="$(cd "$work" && npm pack "${package}@${FFMPEG_CORE_VERSION}" --silent | tail -n 1)"
+            mkdir -p "$work/$folder" "_site/Engine/$folder"
+            tar -xzf "$work/$tarball" -C "$work/$folder"
+            cp "$work/$folder/package/dist/umd/"ffmpeg-core.* "_site/Engine/$folder/"
+          done
+
+      - name: 驗證核心檔案
+        run: |
+          set -euo pipefail
+          for folder in ST MT; do
+            wasm="_site/Engine/$folder/ffmpeg-core.wasm"
+            js="_site/Engine/$folder/ffmpeg-core.js"
+            test "$(head -c 4 "$wasm" | od -An -tx1 | tr -d ' \n')" = "0061736d" || { echo "✖ $wasm 不是有效的 WebAssembly"; exit 1; }
+            grep -q createFFmpegCore "$js" || { echo "✖ $js 內容不正確"; exit 1; }
+            echo "✔ Engine/$folder"
+            echo ""
+          done
+          test -f _site/Engine/MT/ffmpeg-core.worker.js || { echo "✖ 缺少 Engine/MT/ffmpeg-core.worker.js"; exit 1; }
+          ls -lh _site/Engine/ST _site/Engine/MT
+
+      - name: 設定 GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上傳網站
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    name: 部署
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
