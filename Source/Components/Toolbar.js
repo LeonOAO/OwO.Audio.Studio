@@ -53,7 +53,7 @@ export class Toolbar {
         btn('split', '✂', '分割', '在播放頭分割片段（S）', () => editor.split()),
         btn('delete', '⌫', '刪除接合', '刪除選取範圍並接合（Delete）', () => editor.rippleDelete()),
         btn('silence', '🔇', '靜音', '選取範圍靜音，長度不變（Shift+Delete）', () => editor.silence()),
-        btn('insert', '⎵', '插入空白', '在指定位置插入任意長度空白（Insert／I）', () => actions.openInsertSilence()),
+        btn('insert', '▢', '插入空白', '在指定位置插入任意長度空白（Insert／I）', () => actions.openInsertSilence()),
         btn('keep', '⛶', '只保留', '只保留選取範圍（K）', () => editor.keepRange()),
         btn('copy', '⧉', '複製', '複製選取範圍（Ctrl+C）', () => editor.copy()),
         btn('cut', '✄', '剪下', '剪下選取範圍（Ctrl+X）', () => editor.cut()),

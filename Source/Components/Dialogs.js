@@ -126,7 +126,7 @@ export class InsertSilenceDialog {
       h('label', { class: 'Row' }, h('span', null, '套用音軌'), this.scope),
       h('p', { class: 'Hint' }, '可直接輸入 2.75s、2750ms 或 00:00:02.750；輸入框內按 ↑↓ 可微調 1 毫秒。'));
 
-    this.dialog = createShell('⎵ 插入空白', body, [
+    this.dialog = createShell('▢ 插入空白', body, [
       h('button', { class: 'Btn', type: 'button', onclick: () => this.dialog.close('cancel') }, '取消'),
       h('button', { class: 'Btn Primary', type: 'button', onclick: () => this.confirm() }, '插入')
     ]);
