@@ -1,235 +1,210 @@
-# OwO Audio Studio v1.0.0（GitHub Pages 版）
+# 🎧✨ OwO Audio Studio (OwO 音訊工作室)
 
-純瀏覽器、免上傳、多格式音訊編輯與轉換工具。
+![OwO Audio Studio 編輯畫面](Screenshots/OwO_Showcase.png)
 
-只用 GitHub 就能架設：不需要 Python、不需要 Node.js、不需要任何伺服器，也不用手動下載 ffmpeg 核心。
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![部署到 GitHub Pages](https://github.com/LeonOAO/OwO.Audio.Studio/actions/workflows/Deploy.yml/badge.svg)](https://github.com/LeonOAO/OwO.Audio.Studio/actions/workflows/Deploy.yml)
 
-所有解碼、剪輯、混音與編碼都在使用者自己的瀏覽器中完成，音訊檔案不會上傳到 GitHub 或任何地方。
+**OwO Audio Studio** 是一款完全在瀏覽器中執行的音訊編輯與轉檔工具。支援毫秒級裁切、在任意時間點插入空白、多軌剪輯，以及 MP3、M4A、WAV、FLAC、Opus 等多種格式的匯入與匯出。所有處理都在您自己的電腦上完成，**音訊檔案不會上傳到任何伺服器**。
 
----
+🌐 **立即使用：<https://leonoao.github.io/OwO.Audio.Studio/>**
 
-## 一、架設步驟
+## 🌟 核心功能說明 (Features)
 
-### 1. 建立儲存庫
+### ✂️ 毫秒級精準裁切 (Millisecond Trimming)
 
-1. 登入 GitHub，點右上角 **＋ → New repository**。
-2. Repository name 輸入 `OwO-Audio-Studio`（可自訂）。
-3. 選 **Public**。免費帳號只能用公開儲存庫架設 GitHub Pages。
-4. 不要勾選「Add a README file」，按 **Create repository**。
+以取樣點為單位計算，裁切位置比 1 毫秒更精細：
 
-### 2. 上傳檔案
+- **直接輸入時間**：支援 `00:01:23.456`、`1:23.456`、`83456ms`、`83.456s`、`4005888smp` 等格式。
+- **相對調整**：輸入 `+250ms`、`-1ms` 即可從目前位置前後移動。
+- **微調按鈕**：每個時間欄位旁都有 **−10／−1／+1／+10 毫秒** 按鈕；在欄位內按 ↑↓ 也能微調 1 毫秒（按住 Shift 為 10 毫秒）。
+- **取樣點級放大**：波形可放大到看見每一個取樣點，48 kHz 下精度約 0.0208 毫秒。
 
-1. 在新儲存庫頁面點 **uploading an existing file**。
-2. 開啟解壓縮後的 `OwO Audio Studio` 資料夾，**選取資料夾裡面的全部內容**（包含 `.github` 資料夾），一起拖曳到網頁上。
-3. 等待上傳完成，按 **Commit changes**。
+### ⎵ 插入空白與靜音 (Insert Silence & Mute)
 
-上傳完成後，儲存庫最上層應該看得到 `.github`、`Source`、`Icons`、`Tests` 資料夾和 `index.html`。`index.html` 必須在最上層，不能多包一層資料夾。
-
-> `.github` 是以句點開頭的資料夾。Windows 檔案總管會正常顯示；若拖曳後沒有出現，請看下方「常見問題」的手動建立方式。
-
-### 3. 開啟 GitHub Pages
-
-1. 到儲存庫的 **Settings → Pages**。
-2. **Source** 選 **GitHub Actions**（不是 Deploy from a branch）。
-3. 到 **Actions** 頁籤，點左側「部署到 GitHub Pages」，按右邊 **Run workflow → Run workflow**。
-
-約一到兩分鐘後，執行紀錄出現綠色勾勾就完成了。網址為：
-
-```text
-https://你的帳號.github.io/OwO-Audio-Studio/
-```
-
-之後每次修改並推送到 `main` 分支，都會自動重新部署。
-
-### 4. 確認是否成功
-
-第一次開啟網站時頁面會**自動重新整理一次**，這是正常現象（說明見「技術說明」）。之後確認：
-
-- 右下角狀態列顯示 **🔒 跨來源隔離**
-- 左下角顯示 **🟢 ffmpeg 多執行緒核心**
-
----
-
-## 二、部署流程做了什麼
-
-`.github/workflows/Deploy.yml` 會在 GitHub 的雲端主機上自動執行：
-
-1. 執行單元測試；任何一項失敗就停止，不會發布壞掉的版本。
-2. 把網站需要的檔案複製到 `_site`。
-3. 從 npm 官方套件庫下載 ffmpeg.wasm 核心：
-   - `@ffmpeg/core` → `Engine/ST`（單執行緒）
-   - `@ffmpeg/core-mt` → `Engine/MT`（多執行緒）
-4. 檢查核心檔案是否為有效的 WebAssembly。
-5. 部署到 GitHub Pages。
-
-核心檔案不放在儲存庫裡，所以不會碰到 GitHub 網頁上傳單檔 25 MiB 的限制。要更換核心版本，修改 `Deploy.yml` 裡的 `FFMPEG_CORE_VERSION` 即可。
-
----
-
-## 三、核心功能
-
-### 毫秒級裁切
-
-- 所有時間欄位都可以輸入 `00:01:23.456`、`1:23.456`、`83456ms`、`83.456s`、`4005888smp`。
-- 也可以輸入相對值，例如 `+250ms`、`-1ms`。
-- 每個欄位旁有 **−10／−1／+1／+10 毫秒**微調按鈕；在欄位內按 ↑↓ 微調 1 毫秒（Shift 為 10 毫秒）。
-- 內部一律以**取樣點**計算。48 kHz 下精度約 0.0208 毫秒。
-- 時間顯示單位可切換為「時:分:秒.毫秒／毫秒／取樣點」。
-- 波形可以放大到每個取樣點 20 像素。
-
-### 插入空白與靜音
+在指定時間點加入任意長度的空白，或讓某一段變安靜：
 
 | 操作 | 結果 | 總長度 |
 |---|---|---|
-| **插入空白**（I／Insert） | 在指定位置插入任意長度的空白，後方內容整段往後推 | 增加 |
-| **靜音**（Shift+Delete） | 把選取範圍變成無聲，後方不移動 | 不變 |
+| **插入空白**（I） | 在指定位置插入空白，後方內容整段往後推 | 增加 |
+| **靜音**（Shift + Delete） | 把選取範圍變成無聲，後方不移動 | 不變 |
 | **刪除接合**（Delete） | 刪除選取範圍，後方往前接合 | 減少 |
 | **只保留**（K） | 只留下選取範圍 | 等於選取長度 |
 
-刪除、插入空白、靜音的接點預設加上 **3 ms 等功率淡化**避免爆音，可在「設定 → 接點淡化」調整，設為 0 即關閉。勾選「零交越點」後，選取邊界會自動移到 ±5 ms 內最近的零交越點。
+- **常用長度快速鍵**：插入空白對話框提供 1 毫秒到 10 秒的常用長度。
+- **防爆音處理**：接點預設加上 3 毫秒等功率淡化，也可自動對齊零交越點。
 
-### 多軌與片段
+### 🎚️ 多軌剪輯 (Multi-track Editing)
 
-- 每條音軌各有音量、聲相、靜音（M）、獨奏（S）。
-- 拖曳片段**標題列**移動片段，可拖到其他音軌；拖曳**左右邊緣**修剪片段；雙擊片段選取整段。
-- 右側面板可調整片段增益、淡入淡出長度與曲線，或執行「正規化 −1 dB」（只調整增益，不修改原始音訊）。
-- 「套用」選項決定編輯操作套用到全部音軌或只套用到目前音軌。
+像專業音訊軟體一樣排列與調整多段音訊：
 
-### 非破壞式編輯與自動儲存
+- **音軌控制**：每條音軌都有音量、聲相、靜音（M）與獨奏（S）。
+- **片段操作**：拖曳標題列移動片段（可跨音軌），拖曳左右邊緣修剪長度，雙擊選取整段。
+- **淡入淡出**：可設定長度，並選擇等功率、線性或指數曲線。
+- **正規化**：一鍵將片段峰值調整到 −1 dBFS。
+- **複製貼上**：支援插入貼上（後方內容往後推）與覆蓋貼上（長度不變）。
 
-- 所有剪輯只修改片段清單，匯出時才一次合成並編碼，編輯多少次都不會損失音質。
-- 復原／重做最多 200 步，連續拖曳只算一步。
-- 專案自動儲存在使用者自己的瀏覽器（IndexedDB＋OPFS），重新開啟網頁會自動還原。按「新專案」會清除。
+### 🔄 多格式匯入與匯出 (Format Conversion)
 
----
-
-## 四、匯出
-
-| 模式 | 說明 |
+| 類型 | 支援格式 |
 |---|---|
-| 完整混音 | 精確到取樣點，套用所有剪輯、淡化與增益，重新編碼輸出 |
-| 每條音軌分別輸出 | 每條含片段的音軌各輸出一個檔案，打包成 ZIP |
-| 快速裁切原始檔 | 不重新編碼，速度快、音質不變；起訖點會對齊 MP3／AAC 壓縮框架，**不保證毫秒精準**，也不套用剪輯效果 |
+| **匯入音訊** | MP3、AAC、M4A、WAV、FLAC、OGG、Opus、AIFF、WMA、AMR、AC-3、DTS、CAF、MKA 等 |
+| **影片抽音** | MP4、MKV、MOV、AVI、WebM、TS、FLV、3GP、WMV 等 |
+| **常用匯出** | MP3（CBR／VBR）、M4A（AAC）、WAV（16／24／32-bit）、FLAC、OGG Vorbis、Opus |
+| **專業匯出** | AAC（ADTS）、AIFF、ALAC、AC-3、WMA、Wave64、CAF、WebM、MKA |
 
-| 分組 | 格式 |
+- **中繼資料**：可編輯標題、演出者、專輯等資訊，並為 MP3、M4A、FLAC 加入封面圖片。
+- **分軌輸出**：每條音軌各輸出一個檔案，自動打包成 ZIP。
+- **快速裁切**：不重新編碼，直接截取原始檔，速度快且音質不變。
+
+### 💾 非破壞式編輯與自動儲存 (Non-destructive Editing)
+
+- 所有剪輯只記錄操作，匯出時才一次合成，**編輯再多次也不會損失音質**。
+- 復原／重做最多 200 步。
+- 專案自動儲存在瀏覽器中，關閉網頁後重新開啟會自動還原。
+
+### 📋 執行紀錄 (Execution Logs)
+
+- 在畫面下方查看匯入、剪輯與匯出的詳細過程。
+- 匯出後會自動驗證檔案長度，並記錄預期與實際長度的差異。
+- 遇到問題時，可按「複製」提供協助檢查。
+
+## 🛠️ 使用說明 (Getting Started)
+
+### 🌐 直接線上使用 (Use Online)
+
+不需要安裝任何軟體，用瀏覽器開啟即可：
+
+- 開啟 **<https://leonoao.github.io/OwO.Audio.Studio/>**。
+- 第一次開啟時頁面會**自動重新整理一次**，這是正常現象。
+- 把音訊或影片檔拖曳到視窗中，即可開始編輯。
+- 編輯完成後按 **💾 匯出**，選擇格式並儲存。
+
+**建議使用 Chrome 或 Edge 最新版。** 開啟後請確認畫面底部顯示 **🔒 跨來源隔離** 與 **🟢 ffmpeg 多執行緒核心**。
+
+### 🚀 部署自己的版本 (Deploy Your Own)
+
+只需要 GitHub 帳號，不需要 Python、Node.js 或任何伺服器：
+
+- 點擊本頁面右上角的 **Fork**，複製一份到您的帳號。
+- 到您的儲存庫 **Settings → Pages**，將 **Source** 設為 **GitHub Actions**。
+- 到 **Actions** 頁籤，選擇 **「部署到 GitHub Pages」**，按 **Run workflow**。
+- 等待出現綠色勾號，網站網址為 `https://您的帳號.github.io/OwO.Audio.Studio/`。
+
+**部署流程會自動完成：** 執行單元測試 → 從 npm 下載 ffmpeg.wasm 核心 → 驗證核心檔案 → 發布網站。之後每次推送到 `main` 分支都會自動重新部署。
+
+### 💻 開發者本機測試 (Local Development)
+
+- **取得原始碼**：透過 Git Clone 下載，或下載 ZIP 解壓縮。
+- **執行單元測試**：安裝 [Node.js](https://nodejs.org/) 後，執行 `node --test Tests/Unit/*.test.js`。
+- **專案結構**：不需要任何建置步驟，所有程式都是原生 JavaScript 模組，位於 `Source` 資料夾。
+
+## ⌨️ 常用快捷鍵 (Keyboard Shortcuts)
+
+| 按鍵 | 功能 | 按鍵 | 功能 |
+|---|---|---|---|
+| 空白鍵 | 播放／暫停 | S | 在播放頭分割 |
+| Alt + ← → | 播放頭移動 1 毫秒 | Delete | 刪除並接合 |
+| ← → | 播放頭移動 100 毫秒 | Shift + Delete | 靜音 |
+| [ ／ ] | 設定選取起點／終點 | I | 插入空白 |
+| L | 循環播放選取範圍 | F／Shift + F | 淡入／淡出 |
+| Ctrl + Z／Y | 復原／重做 | Ctrl + E | 匯出 |
+
+完整快捷鍵請在網站中按 **?** 查看。
+
+## 🚨 常見問題排解 (Troubleshooting)
+
+### 1. 畫面顯示「🟡 未找到 ffmpeg 核心」
+
+網站上缺少 ffmpeg 核心檔案，通常是部署流程沒有成功完成：
+
+- 確認 **Settings → Pages** 的 Source 是 **GitHub Actions**，而不是 Deploy from a branch。
+- 到 **Actions** 頁籤，確認「部署到 GitHub Pages」最近一次執行顯示綠色勾號。
+- 開啟 `https://您的帳號.github.io/OwO.Audio.Studio/Engine/ST/ffmpeg-core.js`，若顯示 404 代表核心尚未部署。
+
+在核心部署完成前，仍可使用瀏覽器解碼常見格式、進行所有剪輯操作，並匯出 WAV。
+
+### 2. 畫面顯示「🔓 未隔離（單執行緒）」
+
+GitHub Pages 無法自訂伺服器標頭，因此由 Service Worker 在瀏覽器端補上：
+
+- 重新整理一次頁面，通常即可啟用。
+- 確認瀏覽器沒有封鎖 Service Worker（部分無痕模式會停用）。
+- 單執行緒模式功能完整，只是轉檔速度較慢。
+
+### 3. Actions 執行失敗（紅色叉叉）
+
+點進失敗的執行紀錄，查看是哪一個步驟失敗：
+
+- **執行單元測試**：程式碼有錯誤，紀錄會列出失敗的測試名稱。
+- **下載 ffmpeg.wasm 核心**：通常是 npm 暫時無法連線，按 **Re-run jobs** 重試。
+- **部署**：確認 Pages 的 Source 設定為 GitHub Actions。
+
+### 4. 更新後畫面還是舊版
+
+按 **Ctrl + F5** 強制重新整理，清除瀏覽器快取。
+
+### 5. 匯入大型檔案時瀏覽器變慢
+
+解碼後的音訊會暫存在記憶體中，10 分鐘的 48 kHz 立體聲約需 230 MB。建議單一專案不超過 60 分鐘，並關閉其他佔用記憶體的分頁。
+
+## 🔒 隱私與安全說明 (Privacy)
+
+本工具的設計原則是**所有資料都留在您的電腦上**：
+
+- **不上傳檔案**：音訊的解碼、剪輯、混音與編碼，全部在瀏覽器中以 WebAssembly 執行。
+- **本機儲存**：專案自動儲存在瀏覽器的 IndexedDB 與私有檔案系統（OPFS），只有您的瀏覽器能讀取。
+- **無追蹤**：不使用任何分析工具、廣告或第三方追蹤程式。
+- **清除資料**：按 **🆕 新專案** 即可清除自動儲存的內容。
+
+**網站在第一次載入後可離線使用；ffmpeg 核心只會從本網站下載，不會連線到其他伺服器。**
+
+## 🧩 技術架構 (Architecture)
+
+- **時間單位統一**：內部所有時間都以整數取樣點計算，毫秒只用於顯示與輸入。
+- **空白不佔空間**：片段之間沒有內容的時間就是靜音，插入一小時空白也幾乎不佔記憶體。
+- **播放即匯出**：播放與匯出共用同一套混音程式，聽到的就是匯出的結果。
+- **部署前驗證**：16 項單元測試涵蓋時間解析、所有剪輯操作、WAV 編碼與 ZIP 校驗。
+
+| 技術 | 用途 |
 |---|---|
-| 常用 | MP3（CBR／VBR）、M4A（AAC）、WAV（16／24／32-bit Float）、FLAC、OGG Vorbis、Opus |
-| 專業／相容 | AAC（ADTS）、AIFF、ALAC、AC-3、WMA、Wave64、CAF |
-| 特殊 | WebM Audio、MKA、Ogg FLAC、原始 PCM |
+| [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) | 多格式解碼與編碼 |
+| Web Audio API | 即時播放與音量表 |
+| Canvas | 波形與時間軸繪製 |
+| IndexedDB／OPFS | 專案自動儲存 |
+| Service Worker | 跨來源隔離與離線快取 |
+| GitHub Actions | 自動測試與部署 |
 
-可設定取樣率、聲道、中繼資料，並為 MP3、M4A、FLAC、ALAC 加入封面。匯出後會在日誌記錄預期長度、實際長度與差異毫秒。
+## 🙏 致謝與參考 (Acknowledgements)
 
----
+### 📦 使用的開源元件 (Open Source Components)
 
-## 五、快捷鍵
+以下元件會在部署時一併發布到網站上：
 
-| 類別 | 按鍵 | 功能 |
-|---|---|---|
-| 播放 | 空白鍵 | 播放／暫停 |
-| | Esc | 停止；再按一次回到選取起點 |
-| | L | 循環播放選取範圍 |
-| | P | 從選取起點前 1 秒試聽 |
-| 播放頭 | ← → | 移動 100 毫秒 |
-| | Alt + ← → | 移動 1 毫秒 |
-| | Alt + Shift + ← → | 移動 10 毫秒 |
-| | Ctrl + ← → | 移動 1 秒 |
-| 選取 | [ ／ ] | 以播放頭設定選取起點／終點 |
-| | Ctrl + A／Ctrl + D | 全選／取消選取 |
-| 剪輯 | S | 在播放頭分割 |
-| | Delete | 刪除並接合 |
-| | Shift + Delete | 靜音 |
-| | I／Insert | 插入空白 |
-| | K | 只保留選取 |
-| | F／Shift + F | 淡入／淡出 |
-| | Ctrl + C／X／V | 複製／剪下／插入貼上 |
-| | Ctrl + Shift + V | 覆蓋貼上 |
-| 其他 | Ctrl + Z／Ctrl + Y | 復原／重做 |
-| | Ctrl + O／Ctrl + E | 匯入／匯出 |
-| | ＋／－／0／Z | 放大／縮小／全部／縮放到選取 |
-| | Ctrl + 滾輪 | 以游標為中心縮放 |
+- **[ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm)**：部署流程從 npm 下載 `@ffmpeg/core` 與 `@ffmpeg/core-mt`，負責多格式解碼與編碼。
+- **FFmpeg**：ffmpeg.wasm 的底層，編譯成 WebAssembly 後在瀏覽器中執行。
 
----
+### 💡 設計參考 (Design References)
 
-## 六、常見問題
+以下專案在功能規劃與介面設計上提供了參考。**本專案沒有複製這些專案的程式碼**，所有程式都是另外撰寫的：
 
-**Actions 頁籤沒有「部署到 GitHub Pages」**
+| 專案 | 參考內容 |
+|---|---|
+| **AudioCraft Studio** | 毫秒時間尺、插入空白功能 |
+| **WaveForge** | 片段式剪輯、區段靜音、零交越點吸附、復原機制 |
+| **SoundCraft Studio** | 以時間碼輸入起點與終點的介面 |
+| **audio-editor** | 純靜態、免建置的部署方式 |
+| **AudioSlicer Pro** | Web Audio API 與 ffmpeg.wasm 雙引擎、將核心放在網站本地 |
+| **Waveform Playlist** | 多軌時間軸與片段拖曳 |
+| **coi-serviceworker** | 用 Service Worker 補上跨來源隔離標頭的作法 |
 
-代表 `.github` 資料夾沒有上傳成功。請在儲存庫頁面按 **Add file → Create new file**，檔名輸入 `.github/workflows/Deploy.yml`（輸入斜線會自動建立資料夾），把本機 `.github\workflows\Deploy.yml` 的內容全部貼上，按 **Commit changes**。
+感謝這些開源專案的作者分享他們的成果。
 
-**Actions 執行失敗（紅色叉叉）**
+## 📄 授權條款 (License)
 
-點進失敗的執行紀錄，看是哪一個步驟失敗：
+此專案採用 **GNU General Public License v3.0 (GPLv3)** 授權條款。
+詳情請參閱專案根目錄下的 [LICENSE](LICENSE) 檔案。
 
-- 「執行單元測試」失敗：程式被改壞了，紀錄會列出失敗的測試名稱。
-- 「下載 ffmpeg.wasm 核心」失敗：通常是 npm 暫時無法連線，按 **Re-run jobs** 重試。
-- 「部署」失敗並提到 Pages：確認 Settings → Pages 的 Source 是 **GitHub Actions**。
+本專案部署時使用的 [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) 核心為獨立元件，依其各自的授權條款發布。
 
-**網站顯示 🟡 未找到 ffmpeg 核心**
-
-部署流程沒有成功放入核心，請檢查 Actions 的執行紀錄。這時網站仍可使用瀏覽器解碼常見格式，並匯出 WAV。
-
-**網站顯示 🔓 未隔離（單執行緒）**
-
-重新整理一次頁面。仍未改善時，確認瀏覽器沒有封鎖 Service Worker（例如無痕模式的部分設定）。單執行緒模式功能完整，只是轉檔速度較慢。
-
-**更新後看到的還是舊版**
-
-按 `Ctrl + F5` 強制重新整理。
-
----
-
-## 七、技術說明
-
-### 為什麼第一次開啟會自動重新整理
-
-ffmpeg 多執行緒核心需要 `SharedArrayBuffer`，瀏覽器只有在網頁回應帶有 `Cross-Origin-Opener-Policy` 與 `Cross-Origin-Embedder-Policy` 標頭時才開放。GitHub Pages 無法自訂標頭，所以由 `ServiceWorker.js` 在瀏覽器端補上；Service Worker 第一次安裝後要重新整理一次才會生效。
-
-### 專案結構
-
-```text
-OwO Audio Studio/
-├─ .github/workflows/Deploy.yml   自動測試、下載核心、部署到 GitHub Pages
-├─ .gitattributes                 統一換行格式
-├─ .gitignore
-├─ index.html                     進入頁面
-├─ ServiceWorker.js               跨來源隔離標頭＋離線快取
-├─ manifest.webmanifest           PWA 設定（可安裝成桌面應用程式）
-├─ package.json                   單元測試指令
-├─ Icons/
-├─ Source/
-│  ├─ App/                        Main（進入點）、Editor（應用層中樞）、Styles.css
-│  ├─ Domain/                     純函式：Model、TimeCode、Edit、Fades、Analysis
-│  ├─ Commands/                   History（復原／重做）
-│  ├─ Store/                      狀態容器與設定
-│  ├─ Engine/
-│  │  ├─ Import/                  匯入管線（ffmpeg／瀏覽器後備）
-│  │  ├─ Peaks/                   多層級波形峰值
-│  │  ├─ Playback/                播放引擎
-│  │  ├─ Render/                  共用混音核心（播放與匯出共用）
-│  │  ├─ Export/                  格式定義、內建 WAV 編碼器、ZIP、匯出管線
-│  │  └─ FFmpeg/                  ffmpeg Worker 代理
-│  ├─ Workers/                    FFmpeg.worker.js、Peaks.worker.js
-│  ├─ Storage/                    IndexedDB＋OPFS 自動儲存
-│  ├─ Platform/                   能力偵測、快捷鍵
-│  └─ Components/                 工具列、時間列、時間軸、屬性面板、對話框、回饋元件
-└─ Tests/Unit/                    部署前自動執行的單元測試
-```
-
-`Engine` 資料夾不在儲存庫中，由部署流程自動產生。
-
-### 架構重點
-
-- **時間單位唯一**：內部所有時間都是整數取樣點，毫秒只用於顯示與輸入。
-- **空白不佔資料**：片段之間沒有被覆蓋的時間就是靜音，插入一小時空白也幾乎不佔記憶體。
-- **播放＝匯出**：播放與匯出共用 `Render/Mixer.js`，聽到的就是匯出的結果。
-- **部署前驗證**：16 項單元測試涵蓋時間解析、所有剪輯操作、WAV 編碼與 ZIP 校驗碼，例如在 1.000 秒插入 0.250 秒空白後，第 48000～59999 個取樣點必須全部為 0。
-
----
-
-## 八、限制
-
-- 解碼後的音訊以 32-bit float 保存在記憶體。10 分鐘 48 kHz 立體聲約 230 MB，建議單一專案不超過 60 分鐘。
-- 未載入 ffmpeg 核心時，瀏覽器後備解碼會把非 WAV 檔案重新取樣到專案取樣率。
-- MIDI、MOD／XM／S3M／IT 與無標頭 PCM 目前不支援匯入，匯入時會顯示提示。
-- ffmpeg 轉檔無法中途暫停；按「取消」會終止背景程序，下次使用時自動重新載入。
-- 授權：ffmpeg.wasm 核心由部署流程從 npm 下載，屬 LGPL／GPL 授權元件，不包含在本專案程式碼中。
+*Built with ❤️ for better audio editing.*
