@@ -39,6 +39,64 @@ function createShell(title, body, buttons, extraClass = '') {
 }
 
 /* ==========================================================================
+ * 檔案選擇欄位
+ * --------------------------------------------------------------------------
+ * 取代瀏覽器原生 <input type="file"> 的外觀（原生樣式為按鈕在左、檔名在右）：
+ *
+ *   [ 檔案名稱（靠左，過長時以 … 省略）            ] [選擇檔案]
+ *
+ * 原生 input 隱藏在內部，點按鈕時觸發。
+ * ========================================================================== */
+
+class FilePicker {
+  /**
+   * @param {object} options
+   * @param {string} options.accept       接受的檔案類型
+   * @param {(file: File|null) => void} options.onChange
+   * @param {string} [options.placeholder] 未選擇時顯示的文字
+   */
+  constructor({ accept, onChange, placeholder = '未選擇檔案' }) {
+    this.placeholder = placeholder;
+    this.onChange = onChange;
+
+    this.input = h('input', {
+      type: 'file',
+      accept,
+      class: 'FilePickerInput',
+      tabindex: '-1',
+      onchange: (e) => this.setFile(e.target.files[0] || null)
+    });
+
+    this.name = h('span', { class: 'FilePickerName Empty' }, placeholder);
+
+    this.button = h('button', {
+      class: 'Btn FilePickerButton',
+      type: 'button',
+      onclick: () => this.input.click()
+    }, '選擇檔案');
+
+    this.el = h('span', { class: 'FilePicker' }, this.name, this.button, this.input);
+  }
+
+  /** 設定目前檔案並更新顯示 */
+  setFile(file) {
+    this.file = file;
+    this.name.textContent = file ? file.name : this.placeholder;
+    this.name.title = file ? file.name : '';
+    this.name.classList.toggle('Empty', !file);
+    if (!file) this.input.value = '';
+    this.onChange(file);
+  }
+
+  /** 啟用／停用 */
+  set disabled(value) {
+    this.button.disabled = value;
+    this.input.disabled = value;
+    this.el.classList.toggle('Disabled', value);
+  }
+}
+
+/* ==========================================================================
  * 插入空白
  * ========================================================================== */
 
@@ -130,9 +188,11 @@ export class ExportDialog {
         this.metaInputs[key] = input;
         return h('label', { class: 'Row Stack' }, h('span', null, label), input);
       }));
-    this.coverInput = h('input', {
-      type: 'file', accept: 'image/jpeg,image/png',
-      onchange: (e) => { this.cover = e.target.files[0] || null; }
+
+    // 封面圖片：檔名在左、選擇檔案按鈕靠右
+    this.coverPicker = new FilePicker({
+      accept: 'image/jpeg,image/png',
+      onChange: (file) => { this.cover = file; }
     });
 
     this.notice = h('div', { class: 'Notice' });
@@ -145,7 +205,7 @@ export class ExportDialog {
     this.metaSection = h('fieldset', { class: 'Fieldset' },
       h('legend', null, '中繼資料'),
       metaGrid,
-      h('label', { class: 'Row' }, h('span', null, '封面圖片'), this.coverInput));
+      h('div', { class: 'Row' }, h('span', null, '封面圖片'), this.coverPicker.el));
 
     // 提示放在最上方，避免被長表單擠到看不見
     const body = h('div', { class: 'Form ExportForm' },
@@ -218,7 +278,7 @@ export class ExportDialog {
     const fast = mode === 'fastcut';
     this.formatSection.style.display = fast ? 'none' : '';
     this.metaSection.style.display = fast ? 'none' : '';
-    this.coverInput.disabled = !preset.cover || !engine;
+    this.coverPicker.disabled = !preset.cover || !engine;
     this.sampleRate.disabled = Boolean(preset.fixedRate);
     if (preset.fixedRate) this.sampleRate.value = String(preset.fixedRate);
     else if (this.lastFixed) this.sampleRate.value = 'source';

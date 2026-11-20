@@ -318,6 +318,44 @@ select {
 }
 
 /* -------------------------------------------------------------------------
+ * 檔案選擇欄位：檔名靠左、選擇檔案按鈕靠右
+ * ----------------------------------------------------------------------- */
+.FilePicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.FilePickerName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.FilePickerName.Empty {
+  color: var(--text-3);
+}
+
+.FilePickerButton {
+  flex: none;
+  padding: 4px 12px;
+}
+
+.FilePickerInput {
+  display: none;
+}
+
+.FilePicker.Disabled .FilePickerName {
+  opacity: 0.5;
+}
+
+/* -------------------------------------------------------------------------
  * 工作區
  * ----------------------------------------------------------------------- */
 .Workspace {
@@ -914,6 +952,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0; /* fieldset 預設最小寬度為內容寬度，長檔名會把欄位撐破 */
   margin: 0;
   padding: 10px 12px 12px;
   border: 1px solid var(--line);
